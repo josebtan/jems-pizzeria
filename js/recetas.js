@@ -46,6 +46,17 @@ function getBaseMasa(){
   return recetasCache.find(r => r.tipo === "base");
 }
 
+// Ingredientes propios de la receta + los de la masa base (si aplica).
+// Se usa para descontar el stock cuando se registra una venta.
+export function ingredientesTotales(receta){
+  const lista = (receta.ingredientes || []).map(ing => ({ ...ing }));
+  if(receta.usaMasa){
+    const masa = getBaseMasa();
+    if(masa) (masa.ingredientes || []).forEach(ing => lista.push({ ...ing }));
+  }
+  return lista;
+}
+
 // Devuelve el costo total de una lista de ingredientes [{insumoId, cantidad}]
 function costoIngredientes(lista){
   return (lista || []).reduce((sum, ing) => {

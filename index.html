@@ -2,9 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#181614">
 <title>JEMS · Al Carbón — Gestión de Pizzería</title>
-<link rel="icon" href="assets/logo.png">
+<link rel="icon" href="assets/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -64,13 +66,13 @@
 
     <nav class="nav">
       <button class="nav__item is-active" data-view="ventas">
-        <span class="nav__mark">01</span> Ventas
+        <span class="nav__mark">01</span> <span class="nav__label">Ventas</span>
       </button>
       <button class="nav__item" data-view="insumos">
-        <span class="nav__mark">02</span> Insumos
+        <span class="nav__mark">02</span> <span class="nav__label">Insumos</span>
       </button>
       <button class="nav__item" data-view="recetas">
-        <span class="nav__mark">03</span> Recetas
+        <span class="nav__mark">03</span> <span class="nav__label">Recetas</span>
       </button>
     </nav>
 
@@ -139,28 +141,84 @@
         <button class="btn btn--primary" id="btn-new-insumo">+ Nuevo insumo</button>
       </header>
 
-      <div class="tabs-mini">
-        <button class="tab-mini is-active" data-filter="todos">Todos</button>
-        <button class="tab-mini" data-filter="comprado">Comprados</button>
-        <button class="tab-mini" data-filter="pendiente">Por comprar</button>
+      <div class="tabs-mini tabs-mini--sub" id="insumos-subtabs">
+        <button class="tab-mini is-active" data-subview="lista">Lista</button>
+        <button class="tab-mini" data-subview="stock">Stock</button>
       </div>
 
-      <div class="table-wrap">
-        <table class="table" id="tabla-insumos">
-          <thead>
-            <tr>
-              <th>Insumo</th>
-              <th>Presentación</th>
-              <th>Cantidad</th>
-              <th>Unidad</th>
-              <th>Precio compra</th>
-              <th>Costo / unidad mínima</th>
-              <th>Estado</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="tbody-insumos"></tbody>
-        </table>
+      <!-- SUB-VISTA: LISTA -->
+      <div id="insumos-sub-lista" class="insumos-sub is-active">
+        <div class="stock-intro stock-intro--lista">
+          <div class="stock-intro__text">
+            <p>Catálogo de insumos: aquí defines nombre, presentación y precio de compra para calcular el costo por gramo, mililitro o unidad.</p>
+          </div>
+          <img src="assets/mascota-compras.webp" alt="Mascota JEMS haciendo mercado" class="stock-intro__mascot">
+        </div>
+
+        <div class="tabs-mini">
+          <button class="tab-mini is-active" data-filter="todos">Todos</button>
+          <button class="tab-mini" data-filter="comprado">Comprados</button>
+          <button class="tab-mini" data-filter="pendiente">Por comprar</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" id="tabla-insumos">
+            <thead>
+              <tr>
+                <th>Insumo</th>
+                <th>Presentación</th>
+                <th>Cantidad</th>
+                <th>Unidad</th>
+                <th>Precio compra</th>
+                <th>Costo / unidad mínima</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-insumos"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SUB-VISTA: STOCK -->
+      <div id="insumos-sub-stock" class="insumos-sub">
+        <div class="stock-intro">
+          <div class="stock-intro__text">
+            <p>Registra cada compra para sumarla al stock. Cuando registras una venta, la app descuenta sola los ingredientes de la receta (incluida la masa).</p>
+          </div>
+          <img src="assets/mascota-calculadora.webp" alt="Mascota JEMS calculando" class="stock-intro__mascot">
+        </div>
+
+        <div class="ticket-grid ticket-grid--stock" id="resumen-stock">
+          <div class="ticket">
+            <span class="ticket__label">Gastado en compras</span>
+            <span class="ticket__value" id="s-gastado">$0</span>
+          </div>
+          <div class="ticket">
+            <span class="ticket__label">Valor del stock actual</span>
+            <span class="ticket__value" id="s-valor">$0</span>
+          </div>
+          <div class="ticket ticket--accent">
+            <span class="ticket__label">Insumos agotados</span>
+            <span class="ticket__value" id="s-agotados">0</span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" id="tabla-stock">
+            <thead>
+              <tr>
+                <th>Insumo</th>
+                <th>Stock actual</th>
+                <th>Comprado</th>
+                <th>Consumido (ventas)</th>
+                <th>Gastado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-stock"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 

@@ -2,7 +2,7 @@ import { firebaseConfig, isConfigured } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getFirestore, collection, doc, getDocs, getDoc, addDoc, setDoc,
-  updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp
+  updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth, signInAnonymously, onAuthStateChanged
@@ -84,6 +84,6 @@ if (isConfigured) {
 
 export {
   collection, doc, getDocs, getDoc, addDoc, setDoc,
-  updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp
+  updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, increment
 };
 export { isConfigured };

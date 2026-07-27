@@ -1,7 +1,7 @@
-import { db, ready, collection, doc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot } from "./firebase-init.js";
+import { db, ready, collection, doc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, increment } from "./firebase-init.js";
 import { SEED_INSUMOS } from "./data.js";
 
-export let insumosCache = []; // [{id, nombre, presentacion, cantidad, unidad, precio, estado, costoUnidad}]
+export let insumosCache = []; // [{id, nombre, presentacion, cantidad, unidad, precio, estado, costoUnidad, stock, totalComprado, totalGastado}]
 let currentFilter = "todos";
 const listeners = [];
 
@@ -53,15 +53,25 @@ export async function initInsumos(){
       return { id: d.id, ...data, costoUnidad: costoUnidad(data) };
     }).sort((a,b) => a.nombre.localeCompare(b.nombre));
     renderInsumos();
+    renderStock();
     notify();
   }, (err) => showFirestoreError(err));
 
-  document.querySelectorAll(".tab-mini").forEach(btn => {
+  document.querySelectorAll("#insumos-sub-lista .tab-mini").forEach(btn => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-mini").forEach(b => b.classList.remove("is-active"));
+      document.querySelectorAll("#insumos-sub-lista .tab-mini").forEach(b => b.classList.remove("is-active"));
       btn.classList.add("is-active");
       currentFilter = btn.dataset.filter;
       renderInsumos();
+    });
+  });
+
+  document.querySelectorAll("#insumos-subtabs .tab-mini").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#insumos-subtabs .tab-mini").forEach(b => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      document.querySelectorAll(".insumos-sub").forEach(v => v.classList.remove("is-active"));
+      document.getElementById("insumos-sub-" + btn.dataset.subview).classList.add("is-active");
     });
   });
 }
@@ -105,9 +115,116 @@ function renderInsumos(){
   });
 }
 
+function renderStock(){
+  const tbody = document.getElementById("tbody-stock");
+  if(!tbody) return;
+
+  const rows = insumosCache;
+  let gastadoTotal = 0, valorStock = 0, agotados = 0;
+
+  if(rows.length === 0){
+    tbody.innerHTML = `<tr><td colspan="6" class="list__empty">Aún no hay insumos registrados.</td></tr>`;
+  } else {
+    tbody.innerHTML = rows.map(i => {
+      const stock = i.stock || 0;
+      const comprado = i.totalComprado || 0;
+      const gastado = i.totalGastado || 0;
+      const consumido = Math.max(0, comprado - stock);
+      gastadoTotal += gastado;
+      valorStock += stock * (i.costoUnidad || 0);
+      const agotado = stock <= 0;
+      if(agotado) agotados++;
+      const badge = agotado
+        ? `<span class="stock-badge stock-badge--empty">Agotado</span>`
+        : `<span class="stock-badge stock-badge--ok">${stock} ${i.unidad}</span>`;
+      return `
+        <tr data-id="${i.id}" class="${agotado ? "stock-row--empty" : ""}">
+          <td>${i.nombre}</td>
+          <td>${badge}</td>
+          <td class="mono">${comprado} ${i.unidad}</td>
+          <td class="mono">${consumido} ${i.unidad}</td>
+          <td class="mono">${fmtCOP(gastado)}</td>
+          <td><button class="btn btn--ghost btn--small" data-action="comprar">+ Compra</button></td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  setStockText("s-gastado", fmtCOP(gastadoTotal));
+  setStockText("s-valor", fmtCOP(valorStock));
+  setStockText("s-agotados", String(agotados));
+
+  tbody.querySelectorAll("tr").forEach(tr => {
+    const id = tr.dataset.id;
+    tr.querySelector('[data-action="comprar"]')?.addEventListener("click", () => openCompraModal(id));
+  });
+}
+function setStockText(id, val){ const el = document.getElementById(id); if(el) el.textContent = val; }
+
+function openCompraModal(id){
+  const insumo = getInsumo(id);
+  if(!insumo) return;
+  const root = document.getElementById("modal-root");
+  root.innerHTML = `
+    <div class="modal-overlay" id="ov">
+      <div class="modal">
+        <h2>Registrar compra · ${insumo.nombre}</h2>
+        <div class="field-row">
+          <div class="field"><label>Cantidad comprada (${insumo.unidad})</label><input id="f-cant-compra" type="number" step="any" placeholder="Ej: 1000"></div>
+          <div class="field"><label>Monto pagado</label><input id="f-monto-compra" type="number" step="any" placeholder="Ej: 25000"></div>
+        </div>
+        <div class="modal__actions">
+          <button class="btn" id="btn-cancel">Cancelar</button>
+          <button class="btn btn--primary" id="btn-save">Guardar</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById("btn-cancel").onclick = () => root.innerHTML = "";
+  document.getElementById("ov").addEventListener("click", (e) => { if(e.target.id === "ov") root.innerHTML = ""; });
+  document.getElementById("btn-save").onclick = async () => {
+    const cantidad = parseFloat(document.getElementById("f-cant-compra").value) || 0;
+    const monto = parseFloat(document.getElementById("f-monto-compra").value) || 0;
+    if(cantidad <= 0){ alert("Pon una cantidad comprada mayor a 0."); return; }
+    await registrarCompra(id, cantidad, monto);
+    root.innerHTML = "";
+  };
+}
+
 export async function saveInsumo(idOrNull, data){
   const id = idOrNull || data.nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"") + "-" + Date.now().toString(36);
+  if(!idOrNull){
+    // insumo nuevo: arranca sin stock; las compras se registran en la pestaña Stock
+    data = { ...data, stock: 0, totalComprado: 0, totalGastado: 0 };
+  }
   await setDoc(doc(db, "insumos", id), data, { merge: true });
+}
+
+// ---- Stock: compras y consumo ----
+
+// Suma una compra al stock del insumo (cantidad recibida + monto pagado).
+export async function registrarCompra(id, cantidadComprada, montoPagado){
+  await updateDoc(doc(db, "insumos", id), {
+    stock: increment(cantidadComprada),
+    totalComprado: increment(cantidadComprada),
+    totalGastado: increment(montoPagado),
+  });
+}
+
+// Descuenta del stock una lista de ingredientes [{insumoId, cantidad}] (se usa al registrar una venta).
+export async function descontarStock(lista){
+  for(const ing of (lista || [])){
+    if(!ing.insumoId || !ing.cantidad) continue;
+    await updateDoc(doc(db, "insumos", ing.insumoId), { stock: increment(-ing.cantidad) });
+  }
+}
+
+// Repone al stock una lista de ingredientes previamente descontados (se usa al eliminar una venta).
+export async function reponerStock(lista){
+  for(const ing of (lista || [])){
+    if(!ing.insumoId || !ing.cantidad) continue;
+    await updateDoc(doc(db, "insumos", ing.insumoId), { stock: increment(ing.cantidad) });
+  }
 }
 
 export async function removeInsumo(id){

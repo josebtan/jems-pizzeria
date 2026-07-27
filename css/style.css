@@ -1,15 +1,21 @@
 :root{
-  --ink:#17120e;
-  --char:#221b16;
-  --panel:#2a2119;
-  --panel-2:#332821;
-  --line:#4a3b2f;
-  --cream:#efe5d1;
-  --cream-dim:#c9bda6;
-  --ember:#e8791a;
-  --ember-dim:#a85512;
+  /* paleta oficial JEMS (guía de marca) */
+  --steel:#c0c0c0;
+  --char:#333333;
+  --wood:#8b5a2b;
+  --ember:#e85d1a;
+  --cream:#f2e9d8;
+  --white:#ffffff;
+
+  /* tokens derivados para la UI */
+  --ink:#181614;
+  --panel:#242220;
+  --panel-2:#2d2a27;
+  --line:#413c37;
+  --cream-dim:#c7bcac;
+  --ember-dim:#b3480f;
   --gold:#c9a227;
-  --red:#c43e1c;
+  --red:#d1453b;
   --green:#6f9a4c;
   --radius:10px;
   --font-display:'Oswald', sans-serif;
@@ -34,7 +40,7 @@ body{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
   z-index:100;
 }
-.boot-logo{width:96px;height:96px;border-radius:50%;animation:pulse 1.6s ease-in-out infinite;}
+.boot-logo{width:96px;height:96px;border-radius:50%;object-fit:cover;animation:pulse 1.6s ease-in-out infinite;}
 .boot-text{font-family:var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--cream-dim);font-size:13px;}
 @keyframes pulse{0%,100%{opacity:.65;transform:scale(1);}50%{opacity:1;transform:scale(1.05);}}
 
@@ -58,8 +64,8 @@ body{
   padding:22px 16px;
   position:sticky;top:0;height:100vh;
 }
-.brand{display:flex;align-items:center;gap:12px;padding:0 4px 22px;border-bottom:1px solid var(--line);margin-bottom:18px;}
-.brand__logo{width:44px;height:44px;border-radius:50%;}
+.brand{display:flex;align-items:center;gap:12px;padding:0 4px 22px;border-bottom:1px solid var(--line);margin-bottom:18px;flex-shrink:0;}
+.brand__logo{width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:center;flex-shrink:0;background:var(--char);}
 .brand__text{display:flex;flex-direction:column;line-height:1.1;}
 .brand__name{font-family:var(--font-display);font-size:20px;font-weight:700;letter-spacing:.05em;}
 .brand__tag{font-family:var(--font-display);font-size:11px;letter-spacing:.16em;color:var(--ember);text-transform:uppercase;}
@@ -159,6 +165,30 @@ body{
 .pill--ok{background:rgba(111,154,76,.18);color:var(--green);}
 .pill--pend{background:rgba(232,121,26,.18);color:var(--ember);}
 
+/* insumos: sub-tabs (Lista / Stock) */
+.tabs-mini--sub{margin-bottom:20px;}
+.tabs-mini--sub .tab-mini{font-family:var(--font-display);letter-spacing:.04em;padding:8px 18px;}
+.insumos-sub{display:none;}
+.insumos-sub.is-active{display:block;animation:fadein .2s ease;}
+
+.stock-intro{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  background:linear-gradient(120deg,var(--panel),var(--panel-2));
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 22px;margin-bottom:20px;overflow:hidden;
+}
+.stock-intro__text{flex:1;min-width:0;}
+.stock-intro__text p{margin:0;color:var(--cream-dim);font-size:13.5px;max-width:560px;line-height:1.5;}
+.stock-intro__mascot{height:96px;width:auto;flex-shrink:0;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+
+.ticket-grid--stock{grid-template-columns:repeat(3,1fr);}
+
+/* tabla de stock */
+.stock-row--empty td{color:var(--red);font-weight:600;}
+.stock-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;background:rgba(232,93,26,.16);color:var(--ember);}
+.stock-badge--empty{background:rgba(209,69,59,.18);color:var(--red);}
+.stock-badge--ok{background:rgba(111,154,76,.18);color:var(--green);}
+
 /* recetas */
 .recetas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;}
 .receta-card{
@@ -201,13 +231,57 @@ body{
 .ingredient-line select,.ingredient-line input{width:100%;}
 .remove-x{background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;line-height:1;}
 
+/* ---------- responsive ---------- */
+
+@media (max-width:1100px){
+  .ticket-grid{grid-template-columns:repeat(3,1fr);}
+  .ticket-grid--stock{grid-template-columns:repeat(3,1fr);}
+}
+
 @media (max-width:900px){
   .app{flex-direction:column;}
-  .sidebar{width:100%;height:auto;position:relative;flex-direction:row;align-items:center;padding:14px 16px;}
+  .sidebar{
+    width:100%;height:auto;position:sticky;top:0;z-index:40;
+    flex-direction:row;align-items:center;padding:12px 16px;gap:0;
+  }
   .brand{border:none;margin:0;padding:0;}
-  .nav{flex-direction:row;}
+  .brand__logo{width:36px;height:36px;}
+  .nav{flex-direction:row;gap:6px;}
+  .nav__item{padding:8px 10px;font-size:13.5px;}
   .sidebar__footer{display:none;}
-  .main{padding:20px;}
-  .ticket-grid{grid-template-columns:repeat(2,1fr);}
+  .main{padding:18px;}
+  .ticket-grid,.ticket-grid--stock{grid-template-columns:repeat(2,1fr);}
   .columns{grid-template-columns:1fr;}
+  .stock-intro{flex-direction:column;align-items:flex-start;text-align:left;}
+  .stock-intro__mascot{height:76px;align-self:flex-end;margin-top:-30px;}
+}
+
+@media (max-width:640px){
+  .main{padding:14px 12px 40px;}
+  .view__header{flex-direction:column;align-items:stretch;gap:12px;}
+  .view__header h1{font-size:26px;}
+  .view__header .btn{width:100%;}
+  .ticket-grid,.ticket-grid--stock{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .ticket{padding:12px 14px;}
+  .ticket__value{font-size:18px;}
+
+  /* la barra lateral se vuelve una barra superior compacta con nav scrollable */
+  .sidebar{padding:10px 12px;}
+  .brand__text{display:none;}
+  .nav{overflow-x:auto;-webkit-overflow-scrolling:touch;flex:1;}
+  .nav__item{flex-shrink:0;}
+  .nav__mark{display:none;}
+
+  .table{font-size:12.5px;}
+  .table thead th,.table tbody td{padding:9px 10px;}
+
+  .field-row{grid-template-columns:1fr;}
+  .modal{max-width:100%;width:100%;height:100%;max-height:100%;border-radius:0;padding:20px 16px;}
+  .modal-overlay{padding:0;}
+  .modal__actions{flex-wrap:wrap;}
+  .modal__actions .btn{flex:1;}
+
+  .recetas-grid{grid-template-columns:1fr;}
+
+  .stock-intro__mascot{height:64px;}
 }

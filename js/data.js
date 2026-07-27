@@ -1,7 +1,7 @@
 // Datos iniciales tomados de PizzaGrill_Completo.xlsx
 // Se usan una sola vez para poblar Firestore si las colecciones están vacías.
 
-export const SEED_INSUMOS = [
+const SEED_BASE = [
   { id:"harina",          nombre:"Harina",            presentacion:"1000g", cantidad:1000, unidad:"g",   precio:2500,  estado:"comprado" },
   { id:"levadura",        nombre:"Levadura",          presentacion:"250g",  cantidad:250,  unidad:"g",   precio:7500,  estado:"comprado" },
   { id:"sal",             nombre:"Sal",               presentacion:"500g",  cantidad:500,  unidad:"g",   precio:2000,  estado:"comprado" },
@@ -29,6 +29,16 @@ export const SEED_INSUMOS = [
   { id:"bandeja-metalica",nombre:"Bandeja metálica",  presentacion:"und",   cantidad:2,    unidad:"und", precio:32000, estado:"comprado" },
   { id:"embudo",          nombre:"Embudo",            presentacion:"und",   cantidad:1,    unidad:"und", precio:6000,  estado:"comprado" },
 ];
+
+// Cada insumo arranca con su stock, comprado y gastado en base a su compra inicial
+// (la que se refleja en cantidad/precio). Las compras siguientes se registran
+// desde la pestaña Stock y solo suman a estos tres campos.
+export const SEED_INSUMOS = SEED_BASE.map(i => ({
+  ...i,
+  stock: i.cantidad,
+  totalComprado: i.cantidad,
+  totalGastado: i.precio,
+}));
 
 // tipo: "base" (la masa, se usa dentro de otras recetas) | "pizza"
 export const SEED_RECETAS = [

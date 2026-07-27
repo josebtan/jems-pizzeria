@@ -1,6 +1,6 @@
-import { db, ready, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from "./firebase-init.js";
-import { pizzasSolas, calcularReceta, onRecetasChange, recetasCache } from "./recetas.js";
-import { fmtCOP } from "./insumos.js";
+import { db, ready, collection, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from "./firebase-init.js";
+import { pizzasSolas, calcularReceta, ingredientesTotales, onRecetasChange, recetasCache } from "./recetas.js";
+import { fmtCOP, descontarStock, reponerStock } from "./insumos.js";
 import { DEFAULT_PLANTE } from "./data.js";
 
 export let ventasCache = [];
@@ -82,7 +82,11 @@ export async function marcarEntregada(id){
   await updateDoc(doc(db, "ventas", id), { estado: "entregada", fechaEntrega: new Date().toISOString().slice(0,10) });
 }
 export async function eliminarVenta(id){
-  if(!confirm("¿Eliminar este registro de venta?")) return;
+  if(!confirm("¿Eliminar este registro de venta? Los ingredientes descontados se devuelven al stock.")) return;
+  try{
+    const snap = await getDoc(doc(db, "ventas", id));
+    if(snap.exists()) await reponerStock(snap.data().ingredientesDescontados);
+  }catch(err){ console.error("[Ventas] No se pudo reponer el stock:", err); }
   await deleteDoc(doc(db, "ventas", id));
 }
 
@@ -125,10 +129,18 @@ export function openVentaModal(){
     const recetaId = document.getElementById("f-pizza").value;
     const receta = pizzas.find(p => p.id === recetaId);
     const calc = calcularReceta(receta);
+    const cantidad = parseInt(document.getElementById("f-cantidad").value) || 1;
+
+    // ingredientes que se van a descontar del stock (receta × cantidad vendida, masa incluida)
+    const ingredientesDescontados = ingredientesTotales(receta).map(ing => ({
+      insumoId: ing.insumoId,
+      cantidad: ing.cantidad * cantidad,
+    }));
+
     const data = {
       recetaId,
       nombreReceta: receta.nombre,
-      cantidad: parseInt(document.getElementById("f-cantidad").value) || 1,
+      cantidad,
       estado: document.getElementById("f-estado").value,
       cliente: document.getElementById("f-cliente").value.trim(),
       precioVentaUnit: calc.venta,
@@ -136,8 +148,11 @@ export function openVentaModal(){
       planteUnit: parseFloat(document.getElementById("f-plante").value) || DEFAULT_PLANTE,
       fecha: new Date().toISOString().slice(0,10),
       creado: serverTimestamp(),
+      ingredientesDescontados,
     };
     await addDoc(collection(db, "ventas"), data);
+    try{ await descontarStock(ingredientesDescontados); }
+    catch(err){ console.error("[Ventas] No se pudo descontar el stock:", err); }
     root.innerHTML = "";
   };
 }
