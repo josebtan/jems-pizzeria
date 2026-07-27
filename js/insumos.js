@@ -89,7 +89,7 @@ function renderInsumos(){
   }
 
   tbody.innerHTML = rows.map(i => `
-    <tr data-id="${i.id}">
+    <tr data-id="${i.id}" class="${i.estado === "pendiente" ? "row--pendiente" : ""}">
       <td>${i.nombre}</td>
       <td class="mono">${i.presentacion || "-"}</td>
       <td class="mono">${i.cantidad}</td>

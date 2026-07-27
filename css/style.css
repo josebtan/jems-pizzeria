@@ -165,6 +165,11 @@ body{
 .pill--ok{background:rgba(111,154,76,.18);color:var(--green);}
 .pill--pend{background:rgba(232,121,26,.18);color:var(--ember);}
 
+/* fila completa resaltada cuando el insumo está por comprar */
+.table tbody tr.row--pendiente td{background:rgba(232,93,26,.14);}
+.table tbody tr.row--pendiente:hover td{background:rgba(232,93,26,.22);}
+.table tbody tr.row--pendiente td:first-child{border-left:3px solid var(--ember);}
+
 /* insumos: sub-tabs (Lista / Stock) */
 .tabs-mini--sub{margin-bottom:20px;}
 .tabs-mini--sub .tab-mini{font-family:var(--font-display);letter-spacing:.04em;padding:8px 18px;}
