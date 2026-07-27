@@ -4,15 +4,32 @@
 //  Los obtienes en: Firebase Console > Configuración del proyecto
 //  > Tus apps > (ícono </>) > SDK setup and configuration > Config
 // ============================================================
+// Import the functions you need from the SDKs you need
 
-export const firebaseConfig = {
-  apiKey: "PEGA_AQUI_TU_API_KEY",
-  authDomain: "PEGA_AQUI_TU_PROYECTO.firebaseapp.com",
-  projectId: "PEGA_AQUI_TU_PROYECTO_ID",
-  storageBucket: "PEGA_AQUI_TU_PROYECTO.appspot.com",
-  messagingSenderId: "PEGA_AQUI_TU_SENDER_ID",
-  appId: "PEGA_AQUI_TU_APP_ID"
+import { initializeApp } from "firebase/app";
+
+// TODO: Add SDKs for Firebase products that you want to use
+
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyCHWMBoXmBOPyBgWaqiwXXIgWTz0R9TkQQ",
+
+  authDomain: "jems-pizzeria.firebaseapp.com",
+
+  projectId: "jems-pizzeria",
+
+  storageBucket: "jems-pizzeria.firebasestorage.app",
+
+  messagingSenderId: "895963593681",
+
+  appId: "1:895963593681:web:cb151cff888c4a29febef0"
+
 };
 
-// true mientras no hayas pegado tu configuración real
-export const isConfigured = !firebaseConfig.apiKey.startsWith("PEGA_AQUI");
+// Initialize Firebase
+
+const app = initializeApp(firebaseConfig);
