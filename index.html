@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JEMS · Al Carbón — Gestión de Pizzería</title>
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="boot-screen" class="boot-screen">
+  <img src="assets/logo.png" alt="JEMS Al Carbón" class="boot-logo">
+  <p class="boot-text">Encendiendo el carbón…</p>
+</div>
+
+<div id="config-warning" class="config-warning hidden">
+  <div class="config-warning__box">
+    <h2>Falta conectar Firebase</h2>
+    <p>Edita <code>js/firebase-config.js</code> con los datos de tu proyecto de Firebase para que la app pueda guardar información.</p>
+  </div>
+</div>
+
+<div class="app hidden" id="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/logo.png" alt="JEMS" class="brand__logo">
+      <div class="brand__text">
+        <span class="brand__name">JEMS</span>
+        <span class="brand__tag">Al Carbón</span>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav__item is-active" data-view="ventas">
+        <span class="nav__mark">01</span> Ventas
+      </button>
+      <button class="nav__item" data-view="insumos">
+        <span class="nav__mark">02</span> Insumos
+      </button>
+      <button class="nav__item" data-view="recetas">
+        <span class="nav__mark">03</span> Recetas
+      </button>
+    </nav>
+
+    <div class="sidebar__footer">
+      <span id="conn-dot" class="conn-dot"></span>
+      <span id="conn-label">Conectando…</span>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- VENTAS -->
+    <section id="view-ventas" class="view is-active">
+      <header class="view__header">
+        <div>
+          <span class="view__eyebrow">Sección 01</span>
+          <h1>Ventas</h1>
+          <p class="view__sub">Pedidos pendientes, entregas y el balance real del negocio.</p>
+        </div>
+        <button class="btn btn--primary" id="btn-new-venta">+ Registrar venta</button>
+      </header>
+
+      <div class="ticket-grid" id="resumen-ticket">
+        <div class="ticket">
+          <span class="ticket__label">Pizzas vendidas</span>
+          <span class="ticket__value" id="r-cantidad">0</span>
+        </div>
+        <div class="ticket">
+          <span class="ticket__label">Total vendido</span>
+          <span class="ticket__value" id="r-total">$0</span>
+        </div>
+        <div class="ticket">
+          <span class="ticket__label">Ganancia total</span>
+          <span class="ticket__value" id="r-ganancia">$0</span>
+        </div>
+        <div class="ticket ticket--accent">
+          <span class="ticket__label">Plante (pizzería)</span>
+          <span class="ticket__value" id="r-plante">$0</span>
+        </div>
+        <div class="ticket ticket--gold">
+          <span class="ticket__label">Ganancia real (inversores)</span>
+          <span class="ticket__value" id="r-real">$0</span>
+        </div>
+      </div>
+
+      <div class="columns">
+        <div class="panel">
+          <h3 class="panel__title">Pendientes por entregar</h3>
+          <div id="lista-pendientes" class="list"></div>
+        </div>
+        <div class="panel">
+          <h3 class="panel__title">Entregadas / Vendidas</h3>
+          <div id="lista-vendidas" class="list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSUMOS -->
+    <section id="view-insumos" class="view">
+      <header class="view__header">
+        <div>
+          <span class="view__eyebrow">Sección 02</span>
+          <h1>Insumos</h1>
+          <p class="view__sub">Lo que compras, lo que falta comprar, y el costo real por gramo, mililitro o unidad.</p>
+        </div>
+        <button class="btn btn--primary" id="btn-new-insumo">+ Nuevo insumo</button>
+      </header>
+
+      <div class="tabs-mini">
+        <button class="tab-mini is-active" data-filter="todos">Todos</button>
+        <button class="tab-mini" data-filter="comprado">Comprados</button>
+        <button class="tab-mini" data-filter="pendiente">Por comprar</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table" id="tabla-insumos">
+          <thead>
+            <tr>
+              <th>Insumo</th>
+              <th>Presentación</th>
+              <th>Cantidad</th>
+              <th>Unidad</th>
+              <th>Precio compra</th>
+              <th>Costo / unidad mínima</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-insumos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RECETAS -->
+    <section id="view-recetas" class="view">
+      <header class="view__header">
+        <div>
+          <span class="view__eyebrow">Sección 03</span>
+          <h1>Recetas</h1>
+          <p class="view__sub">Masa y cada pizza por separado. El costo y el precio se recalculan solos según tus insumos.</p>
+        </div>
+        <button class="btn btn--primary" id="btn-new-receta">+ Nueva receta</button>
+      </header>
+
+      <div id="grid-recetas" class="recetas-grid"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- MODALES -->
+<div id="modal-root"></div>
+
+<script type="module" src="js/firebase-config.js"></script>
+<script type="module" src="js/firebase-init.js"></script>
+<script type="module" src="js/data.js"></script>
+<script type="module" src="js/insumos.js"></script>
+<script type="module" src="js/recetas.js"></script>
+<script type="module" src="js/ventas.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
