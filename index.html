@@ -13,15 +13,43 @@
 
 <div id="boot-screen" class="boot-screen">
   <img src="assets/logo.png" alt="JEMS Al Carbón" class="boot-logo">
-  <p class="boot-text">Encendiendo el carbón…</p>
+  <p class="boot-text" id="boot-text">Encendiendo el carbón…</p>
 </div>
 
 <div id="config-warning" class="config-warning hidden">
   <div class="config-warning__box">
-    <h2>Falta conectar Firebase</h2>
-    <p>Edita <code>js/firebase-config.js</code> con los datos de tu proyecto de Firebase para que la app pueda guardar información.</p>
+    <h2 id="warn-title">Falta conectar Firebase</h2>
+    <p id="warn-body">Edita <code>js/firebase-config.js</code> con los datos de tu proyecto de Firebase para que la app pueda guardar información.</p>
   </div>
 </div>
+
+<script>
+  // Red de seguridad: si en 10s la app no arrancó (error de red, de módulos, etc.)
+  // se muestra un mensaje claro en vez de dejar la pantalla de carga pegada para siempre.
+  window.__bootWatchdog = setTimeout(function () {
+    var boot = document.getElementById("boot-screen");
+    var warn = document.getElementById("config-warning");
+    if (boot && !boot.classList.contains("hidden")) {
+      boot.classList.add("hidden");
+      document.getElementById("warn-title").textContent = "La app no pudo iniciar";
+      document.getElementById("warn-body").innerHTML =
+        "Está tardando más de lo normal. Abre la consola del navegador (F12 → pestaña Console) y revisa el error en rojo. " +
+        "Causas típicas: la base de datos de Firestore aún no está creada, el proveedor de acceso Anónimo no está habilitado, " +
+        "o hay un error de escritura en <code>js/firebase-config.js</code>.";
+      warn.classList.remove("hidden");
+    }
+  }, 10000);
+  window.addEventListener("error", function (e) {
+    var warn = document.getElementById("config-warning");
+    var boot = document.getElementById("boot-screen");
+    if (boot) boot.classList.add("hidden");
+    if (warn) {
+      document.getElementById("warn-title").textContent = "Ocurrió un error al cargar la app";
+      document.getElementById("warn-body").textContent = String(e.message || e);
+      warn.classList.remove("hidden");
+    }
+  });
+</script>
 
 <div class="app hidden" id="app">
 
@@ -156,12 +184,6 @@
 <!-- MODALES -->
 <div id="modal-root"></div>
 
-<script type="module" src="js/firebase-config.js"></script>
-<script type="module" src="js/firebase-init.js"></script>
-<script type="module" src="js/data.js"></script>
-<script type="module" src="js/insumos.js"></script>
-<script type="module" src="js/recetas.js"></script>
-<script type="module" src="js/ventas.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

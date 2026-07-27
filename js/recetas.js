@@ -15,16 +15,29 @@ async function seedIfEmpty(){
   }
 }
 
+function showFirestoreError(err){
+  console.error("[Firestore/recetas]", err);
+  const grid = document.getElementById("grid-recetas");
+  const msg = err.code === "unavailable" || err.code === "not-found"
+    ? "No se pudo leer la base de datos. Revisa en Firebase Console que creaste Firestore Database."
+    : err.code === "permission-denied"
+    ? "Firestore rechazó el acceso (permission-denied). Revisa las reglas de Firestore."
+    : "Error de Firestore: " + err.message;
+  if(grid) grid.innerHTML = `<p class="list__empty">${msg}</p>`;
+}
+
 export async function initRecetas(){
   const okAuth = await ready;
   if(!okAuth || !db) return;
-  await seedIfEmpty();
+  try{
+    await seedIfEmpty();
+  }catch(err){ showFirestoreError(err); return; }
 
   onSnapshot(collection(db, "recetas"), (snap) => {
     recetasCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderRecetas();
     notify();
-  });
+  }, (err) => showFirestoreError(err));
 
   onInsumosChange(() => { renderRecetas(); notify(); });
 }

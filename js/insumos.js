@@ -29,10 +29,23 @@ async function seedIfEmpty(){
   }
 }
 
+function showFirestoreError(err){
+  console.error("[Firestore/insumos]", err);
+  const tbody = document.getElementById("tbody-insumos");
+  const msg = err.code === "unavailable" || err.code === "not-found"
+    ? "No se pudo leer la base de datos. Revisa en Firebase Console que creaste Firestore Database (Build → Firestore Database → Crear base de datos)."
+    : err.code === "permission-denied"
+    ? "Firestore rechazó el acceso (permission-denied). Revisa que publicaste las reglas indicadas en el README."
+    : "Error de Firestore: " + err.message;
+  if(tbody) tbody.innerHTML = `<tr><td colspan="8" class="list__empty">${msg}</td></tr>`;
+}
+
 export async function initInsumos(){
   const okAuth = await ready;
   if(!okAuth || !db) return;
-  await seedIfEmpty();
+  try{
+    await seedIfEmpty();
+  }catch(err){ showFirestoreError(err); return; }
 
   onSnapshot(collection(db, "insumos"), (snap) => {
     insumosCache = snap.docs.map(d => {
@@ -41,7 +54,7 @@ export async function initInsumos(){
     }).sort((a,b) => a.nombre.localeCompare(b.nombre));
     renderInsumos();
     notify();
-  });
+  }, (err) => showFirestoreError(err));
 
   document.querySelectorAll(".tab-mini").forEach(btn => {
     btn.addEventListener("click", () => {

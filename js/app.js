@@ -4,6 +4,7 @@ import { initRecetas, openRecetaModal } from "./recetas.js";
 import { initVentas } from "./ventas.js";
 
 function showApp(){
+  if(window.__bootWatchdog) clearTimeout(window.__bootWatchdog);
   document.getElementById("boot-screen").classList.add("hidden");
   if(!isConfigured){
     document.getElementById("config-warning").classList.remove("hidden");
@@ -32,9 +33,24 @@ async function main(){
   showApp();
   if(!isConfigured) return;
 
-  await initInsumos();
-  await initRecetas();
-  await initVentas();
+  try{
+    await initInsumos();
+    await initRecetas();
+    await initVentas();
+  }catch(err){
+    console.error("[App] Error de arranque:", err);
+  }
 }
 
-main();
+main().catch((err) => {
+  console.error("[App] Error fatal:", err);
+  if(window.__bootWatchdog) clearTimeout(window.__bootWatchdog);
+  const boot = document.getElementById("boot-screen");
+  const warn = document.getElementById("config-warning");
+  if(boot) boot.classList.add("hidden");
+  if(warn){
+    document.getElementById("warn-title").textContent = "Ocurrió un error al iniciar la app";
+    document.getElementById("warn-body").textContent = String(err.message || err);
+    warn.classList.remove("hidden");
+  }
+});
