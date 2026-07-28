@@ -37,7 +37,7 @@ function showFirestoreError(err){
     : err.code === "permission-denied"
     ? "Firestore rechazó el acceso (permission-denied). Revisa que publicaste las reglas indicadas en el README."
     : "Error de Firestore: " + err.message;
-  if(tbody) tbody.innerHTML = `<tr><td colspan="8" class="list__empty">${msg}</td></tr>`;
+  if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="list__empty">${msg}</td></tr>`;
 }
 
 export async function initInsumos(){
@@ -84,16 +84,14 @@ function renderInsumos(){
   if(currentFilter === "pendiente") rows = rows.filter(i => i.estado === "pendiente");
 
   if(rows.length === 0){
-    tbody.innerHTML = `<tr><td colspan="8" class="list__empty">No hay insumos en esta vista.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="list__empty">No hay insumos en esta vista.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = rows.map(i => `
     <tr data-id="${i.id}" class="${i.estado === "pendiente" ? "row--pendiente" : ""}">
       <td>${i.nombre}</td>
-      <td class="mono">${i.presentacion || "-"}</td>
-      <td class="mono">${i.cantidad}</td>
-      <td class="mono">${i.unidad}</td>
+      <td class="mono">${i.cantidad} ${i.unidad}</td>
       <td class="mono">${fmtCOP(i.precio)}</td>
       <td class="mono">${fmtCOP(i.costoUnidad)} / ${i.unidad}</td>
       <td>
@@ -101,7 +99,8 @@ function renderInsumos(){
           ${i.estado === "comprado" ? "Comprado" : "Por comprar"}
         </span>
       </td>
-      <td>
+      <td class="td-actions">
+        <button class="btn btn--primary btn--small" data-action="comprar">Registrar compra</button>
         <button class="btn btn--ghost btn--small" data-action="edit">Editar</button>
         <button class="btn btn--ghost btn--small btn--danger" data-action="delete">Eliminar</button>
       </td>
@@ -110,9 +109,18 @@ function renderInsumos(){
 
   tbody.querySelectorAll("tr").forEach(tr => {
     const id = tr.dataset.id;
+    tr.querySelector('[data-action="comprar"]')?.addEventListener("click", () => openCompraModal(id));
     tr.querySelector('[data-action="edit"]').addEventListener("click", () => openInsumoModal(id));
     tr.querySelector('[data-action="delete"]').addEventListener("click", () => removeInsumo(id));
   });
+}
+
+function nivelStock(i){
+  const stock = i.stock || 0;
+  const umbralBajo = (i.cantidad || 0) * 0.25;
+  if(stock <= 0) return "agotado";
+  if(stock <= umbralBajo) return "bajo";
+  return "ok";
 }
 
 function renderStock(){
@@ -120,46 +128,47 @@ function renderStock(){
   if(!tbody) return;
 
   const rows = insumosCache;
-  let gastadoTotal = 0, valorStock = 0, agotados = 0;
+  let bajos = 0, agotados = 0;
 
   if(rows.length === 0){
-    tbody.innerHTML = `<tr><td colspan="6" class="list__empty">Aún no hay insumos registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3" class="list__empty">Aún no hay insumos registrados.</td></tr>`;
   } else {
     tbody.innerHTML = rows.map(i => {
       const stock = i.stock || 0;
-      const comprado = i.totalComprado || 0;
-      const gastado = i.totalGastado || 0;
-      const consumido = Math.max(0, comprado - stock);
-      gastadoTotal += gastado;
-      valorStock += stock * (i.costoUnidad || 0);
-      const agotado = stock <= 0;
-      if(agotado) agotados++;
-      const badge = agotado
-        ? `<span class="stock-badge stock-badge--empty">Agotado</span>`
-        : `<span class="stock-badge stock-badge--ok">${stock} ${i.unidad}</span>`;
+      const nivel = nivelStock(i);
+      if(nivel === "bajo") bajos++;
+      if(nivel === "agotado") agotados++;
+
+      const celdaClase = nivel === "agotado" ? "stock-cell--agotado" : nivel === "bajo" ? "stock-cell--bajo" : "";
+      const texto = nivel === "agotado" ? "Agotado" : `${stock} ${i.unidad}`;
+
       return `
-        <tr data-id="${i.id}" class="${agotado ? "stock-row--empty" : ""}">
+        <tr data-id="${i.id}">
           <td>${i.nombre}</td>
-          <td>${badge}</td>
-          <td class="mono">${comprado} ${i.unidad}</td>
-          <td class="mono">${consumido} ${i.unidad}</td>
-          <td class="mono">${fmtCOP(gastado)}</td>
-          <td><button class="btn btn--ghost btn--small" data-action="comprar">+ Compra</button></td>
+          <td class="mono ${celdaClase}">${texto}</td>
+          <td><button class="btn btn--ghost btn--small" data-action="solicitar" ${i.estado === "pendiente" ? "disabled" : ""}>
+            ${i.estado === "pendiente" ? "Ya solicitada" : "Solicitar compra"}
+          </button></td>
         </tr>
       `;
     }).join("");
   }
 
-  setStockText("s-gastado", fmtCOP(gastadoTotal));
-  setStockText("s-valor", fmtCOP(valorStock));
+  setStockText("s-total", String(rows.length));
+  setStockText("s-bajos", String(bajos));
   setStockText("s-agotados", String(agotados));
 
   tbody.querySelectorAll("tr").forEach(tr => {
     const id = tr.dataset.id;
-    tr.querySelector('[data-action="comprar"]')?.addEventListener("click", () => openCompraModal(id));
+    tr.querySelector('[data-action="solicitar"]')?.addEventListener("click", () => solicitarCompra(id));
   });
 }
 function setStockText(id, val){ const el = document.getElementById(id); if(el) el.textContent = val; }
+
+// Marca el insumo como "por comprar" en la Lista, sin tocar el stock todavía.
+export async function solicitarCompra(id){
+  await updateDoc(doc(db, "insumos", id), { estado: "pendiente" });
+}
 
 function openCompraModal(id){
   const insumo = getInsumo(id);
@@ -202,12 +211,14 @@ export async function saveInsumo(idOrNull, data){
 
 // ---- Stock: compras y consumo ----
 
-// Suma una compra al stock del insumo (cantidad recibida + monto pagado).
+// Suma una compra al stock del insumo (cantidad recibida + monto pagado)
+// y limpia el estado "pendiente" ya que la compra quedó resuelta.
 export async function registrarCompra(id, cantidadComprada, montoPagado){
   await updateDoc(doc(db, "insumos", id), {
     stock: increment(cantidadComprada),
     totalComprado: increment(cantidadComprada),
     totalGastado: increment(montoPagado),
+    estado: "comprado",
   });
 }
 

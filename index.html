@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="JEMS Gestión">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/style.css?v=6">
 </head>
 <body>
 
@@ -162,7 +162,7 @@
       <div id="insumos-sub-lista" class="insumos-sub is-active">
         <div class="stock-intro stock-intro--lista">
           <div class="stock-intro__text">
-            <p>Catálogo de insumos: aquí defines nombre, presentación y precio de compra para calcular el costo por gramo, mililitro o unidad.</p>
+            <p>Catálogo de insumos: precio y costo por gramo, mililitro o unidad. Cuando llegue un pedido, regístralo aquí con "Registrar compra" — eso alimenta el stock disponible.</p>
           </div>
           <img src="assets/mascota-compras.webp" alt="Mascota JEMS haciendo mercado" class="stock-intro__mascot">
         </div>
@@ -178,11 +178,9 @@
             <thead>
               <tr>
                 <th>Insumo</th>
-                <th>Presentación</th>
                 <th>Cantidad</th>
-                <th>Unidad</th>
                 <th>Precio compra</th>
-                <th>Costo / unidad mínima</th>
+                <th>Precio / unidad</th>
                 <th>Estado</th>
                 <th></th>
               </tr>
@@ -196,22 +194,22 @@
       <div id="insumos-sub-stock" class="insumos-sub">
         <div class="stock-intro">
           <div class="stock-intro__text">
-            <p>Registra cada compra para sumarla al stock. Cuando registras una venta, la app descuenta sola los ingredientes de la receta (incluida la masa).</p>
+            <p>Cuánto tienes disponible de cada insumo ahora mismo. Al registrar una venta, la app descuenta sola los ingredientes de la receta (incluida la masa). Si algo se ve escaso, dale "Solicitar compra" para marcarlo como pendiente en la Lista.</p>
           </div>
           <img src="assets/mascota-calculadora.webp" alt="Mascota JEMS calculando" class="stock-intro__mascot">
         </div>
 
         <div class="ticket-grid ticket-grid--stock" id="resumen-stock">
           <div class="ticket">
-            <span class="ticket__label">Gastado en compras</span>
-            <span class="ticket__value" id="s-gastado">$0</span>
-          </div>
-          <div class="ticket">
-            <span class="ticket__label">Valor del stock actual</span>
-            <span class="ticket__value" id="s-valor">$0</span>
+            <span class="ticket__label">Insumos</span>
+            <span class="ticket__value" id="s-total">0</span>
           </div>
           <div class="ticket ticket--accent">
-            <span class="ticket__label">Insumos agotados</span>
+            <span class="ticket__label">Bajos de stock</span>
+            <span class="ticket__value" id="s-bajos">0</span>
+          </div>
+          <div class="ticket ticket--accent">
+            <span class="ticket__label">Agotados</span>
             <span class="ticket__value" id="s-agotados">0</span>
           </div>
         </div>
@@ -221,10 +219,7 @@
             <thead>
               <tr>
                 <th>Insumo</th>
-                <th>Stock actual</th>
-                <th>Comprado</th>
-                <th>Consumido (ventas)</th>
-                <th>Gastado</th>
+                <th>Disponible</th>
                 <th></th>
               </tr>
             </thead>
