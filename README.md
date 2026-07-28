@@ -38,6 +38,19 @@ service cloud.firestore {
 
 Si algo falla en la conexión (Firestore no creada, Authentication no habilitado, etc.), la app lo detecta sola y te muestra en pantalla exactamente qué falta — no se queda pegada en la carga.
 
+## 📲 Instalarla como app (PWA)
+
+La app funciona como **Progressive Web App**: se puede instalar en el celular o el computador y abre como una app normal, sin la barra del navegador, con ícono propio y con parte de su funcionamiento offline.
+
+**Instalar en Android (Chrome):** entra a la app → menú (⋮) → **"Instalar aplicación"** (o **"Agregar a pantalla de inicio"**).
+**Instalar en iPhone (Safari):** entra a la app → botón compartir (□↑) → **"Agregar a pantalla de inicio"**.
+**Instalar en computador (Chrome/Edge):** entra a la app → ícono de instalar (⊕) en la barra de direcciones, a la derecha.
+
+Qué hace y qué no hace el modo offline:
+- El **"cascarón" de la app** (HTML, CSS, JS, íconos) queda guardado en el dispositivo, así que abre al instante aunque el internet esté lento.
+- Los **datos ya vistos** (insumos, recetas, ventas cargadas antes) se guardan en caché local de Firestore, así que se pueden seguir consultando sin señal.
+- Para **registrar cosas nuevas** (una venta, una compra) sin internet, la app las deja guardadas localmente y las sube solas apenas vuelve la conexión — pero mientras tanto no se reflejan en el resumen de otro celular hasta que sincronicen.
+
 ## 📱 Secciones de la app
 
 - **Ventas**: registra pedidos pendientes o ya entregados. El resumen de arriba se actualiza solo: pizzas vendidas, total vendido, ganancia, plante (fijo para la pizzería) y ganancia real (para los inversores). Al registrar una venta, la app descuenta automáticamente del stock los ingredientes de esa receta (incluida la masa).
@@ -71,15 +84,18 @@ Todo el layout es responsive: en mobile el menú lateral pasa a una barra superi
 
 ```
 index.html
+manifest.json           ← configuracion de la app instalable (PWA)
+sw.js                    ← service worker: cache de archivos para uso offline
 css/style.css
 js/firebase-config.js   ← aquí pegas tu configuración de Firebase
-js/firebase-init.js     ← conexión a Firestore + login anónimo
+js/firebase-init.js     ← conexión a Firestore (con cache offline) + login anónimo
 js/data.js              ← datos iniciales (semilla) tomados del Excel
 js/insumos.js           ← catálogo de insumos + stock/compras
 js/recetas.js           ← recetas, costeo y cálculo de ingredientes totales
 js/ventas.js            ← ventas, resumen y descuento de stock
 js/app.js               ← navegación y arranque
 assets/logo.png
+assets/icons/           ← íconos de la app instalable en varios tamaños
 assets/mascota-compras.webp
 assets/mascota-calculadora.webp
 ```

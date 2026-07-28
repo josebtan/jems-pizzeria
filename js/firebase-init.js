@@ -1,7 +1,8 @@
 import { firebaseConfig, isConfigured } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, doc, getDocs, getDoc, addDoc, setDoc,
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  collection, doc, getDocs, getDoc, addDoc, setDoc,
   updateDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp, increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
@@ -35,7 +36,17 @@ function showConnError(msg){
 if (isConfigured) {
   try {
     const app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
+    try {
+      // Cache local persistente: la app puede leer datos ya vistos aunque
+      // se quede sin señal, y sincroniza solo cuando vuelve la conexión.
+      db = initializeFirestore(app, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+      });
+    } catch (persistErr) {
+      // Si falla (navegador viejo, modo incógnito, etc.) seguimos sin cache offline.
+      console.warn("[Firebase] Cache offline no disponible:", persistErr.message);
+      db = initializeFirestore(app, {});
+    }
     auth = getAuth(app);
 
     ready = new Promise((resolve) => {
