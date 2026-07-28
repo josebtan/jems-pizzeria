@@ -240,18 +240,18 @@ body{
 
 .embers-footer{
   position:relative;
-  margin-top:48px;
+  margin-top:36px;
   overflow:hidden;
   background:linear-gradient(180deg, var(--ink) 0%, #0e0c0a 100%);
-  padding:26px 20px 0;
+  padding:20px 20px 0;
   text-align:center;
 }
 
-.embers-footer__content{ position:relative; z-index:2; padding-bottom:8px; }
+.embers-footer__content{ position:relative; z-index:2; padding-bottom:6px; }
 
 .embers-footer__tagline{
   font-family:'Caveat', cursive;
-  font-size:30px;
+  font-size:28px;
   font-weight:700;
   color:var(--cream);
   margin:0 0 4px;
@@ -269,14 +269,14 @@ body{
 .embers-footer__imgwrap{
   position:relative;
   width:100%;
-  height:clamp(110px, 20vw, 230px);
+  height:clamp(70px, 12vw, 150px);
+  max-height:150px;
   overflow:hidden;
 }
 .embers-footer__img{
   position:absolute; inset:0;
   width:100%; height:100%;
   object-fit:cover; object-position:center bottom;
-  filter:drop-shadow(0 0 22px rgba(232,93,26,.25));
 }
 
 .embers-footer__imgwrap .spark{
@@ -353,8 +353,9 @@ body{
 
   .recetas-grid{grid-template-columns:1fr;}
 
-  .embers-footer{margin-top:32px;padding:20px 14px 0;}
-  .embers-footer__tagline{font-size:24px;}
+  .embers-footer{margin-top:26px;padding:16px 14px 0;}
+  .embers-footer__tagline{font-size:22px;}
+  .embers-footer__imgwrap{height:clamp(60px, 22vw, 110px);max-height:110px;}
 
   .stock-intro__mascot{height:64px;}
 }
