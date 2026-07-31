@@ -83,6 +83,15 @@ export function calcularReceta(receta){
 export function getReceta(id){ return recetasCache.find(r => r.id === id); }
 export function pizzasSolas(){ return recetasCache.filter(r => r.tipo === "pizza"); }
 
+// Quita el prefijo numerico ("01 · ", "04 · ") del nombre, solo para mostrar.
+export function nombreVisible(nombre){
+  return (nombre || "").replace(/^\s*\d+\s*[·.\-]\s*/, "");
+}
+function numeroOrden(nombre){
+  const m = (nombre || "").match(/^\s*(\d+)/);
+  return m ? parseInt(m[1], 10) : 999;
+}
+
 function renderRecetas(){
   const grid = document.getElementById("grid-recetas");
   if(!grid) return;
@@ -91,7 +100,16 @@ function renderRecetas(){
     return;
   }
 
-  grid.innerHTML = recetasCache.map(r => {
+  // La masa (base) siempre primero, luego las pizzas en el orden de su numero.
+  const ordenadas = [...recetasCache].sort((a, b) => {
+    if(a.tipo !== b.tipo){
+      if(a.tipo === "base") return -1;
+      if(b.tipo === "base") return 1;
+    }
+    return numeroOrden(a.nombre) - numeroOrden(b.nombre);
+  });
+
+  grid.innerHTML = ordenadas.map(r => {
     const calc = calcularReceta(r);
     const ingredientesHTML = (r.ingredientes || []).map(ing => {
       const insumo = getInsumo(ing.insumoId);
@@ -104,7 +122,7 @@ function renderRecetas(){
     <div class="receta-card" data-id="${r.id}">
       <div class="receta-card__head">
         <div>
-          <h3 class="receta-card__name">${r.nombre}</h3>
+          <h3 class="receta-card__name">${nombreVisible(r.nombre)}</h3>
           <span class="receta-card__tag">${r.tipo === "base" ? "Base · usada en otras recetas" : "Pizza"}</span>
         </div>
       </div>

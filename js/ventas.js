@@ -1,5 +1,5 @@
 import { db, ready, collection, doc, getDoc, addDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from "./firebase-init.js";
-import { pizzasSolas, calcularReceta, ingredientesTotales, onRecetasChange, recetasCache } from "./recetas.js";
+import { pizzasSolas, calcularReceta, ingredientesTotales, onRecetasChange, recetasCache, nombreVisible } from "./recetas.js";
 import { fmtCOP, descontarStock, reponerStock } from "./insumos.js";
 import { DEFAULT_PLANTE } from "./data.js";
 
@@ -42,7 +42,7 @@ function rowHTML(v, pendiente){
   return `
     <div class="venta-row" data-id="${v.id}">
       <div class="venta-row__main">
-        <span class="venta-row__name">${v.nombreReceta} × ${v.cantidad}</span>
+        <span class="venta-row__name">${nombreVisible(v.nombreReceta)} × ${v.cantidad}</span>
         <span class="venta-row__meta">${v.fecha || ""}${v.cliente ? " · " + v.cliente : ""}</span>
       </div>
       <span class="venta-row__price">${fmtCOP(total)}</span>
@@ -92,12 +92,16 @@ export async function eliminarVenta(id){
 
 export function openVentaModal(){
   const root = document.getElementById("modal-root");
-  const pizzas = pizzasSolas();
+  const pizzas = [...pizzasSolas()].sort((a, b) => {
+    const na = parseInt((a.nombre||"").match(/^\s*(\d+)/)?.[1] || "999", 10);
+    const nb = parseInt((b.nombre||"").match(/^\s*(\d+)/)?.[1] || "999", 10);
+    return na - nb;
+  });
   if(pizzas.length === 0){
     alert("Primero crea al menos una receta de tipo pizza en la sección Recetas.");
     return;
   }
-  const opciones = pizzas.map(p => `<option value="${p.id}">${p.nombre}</option>`).join("");
+  const opciones = pizzas.map(p => `<option value="${p.id}">${nombreVisible(p.nombre)}</option>`).join("");
 
   root.innerHTML = `
     <div class="modal-overlay" id="ov">
