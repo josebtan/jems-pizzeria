@@ -183,6 +183,7 @@ body{
 .stock-intro__text{flex:1;min-width:0;}
 .stock-intro__text p{margin:0;color:var(--cream-dim);font-size:13.5px;max-width:560px;line-height:1.5;}
 .stock-intro__mascot{height:96px;width:auto;flex-shrink:0;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));}
+.stock-intro__mascot--flip{transform:scaleX(-1);}
 
 .ticket-grid--stock{grid-template-columns:repeat(3,1fr);}
 
