@@ -114,6 +114,13 @@ export function openVentaModal(){
       <div class="modal">
         <h2>Registrar venta</h2>
         <div class="field"><label>Pizza</label><select id="f-pizza">${opciones}</select></div>
+        <div class="field">
+          <label><input type="checkbox" id="f-mitad"> Media y media (dos sabores)</label>
+        </div>
+        <div class="field-row hidden" id="f-mitad-row">
+          <div class="field"><label>Mitad 1</label><select id="f-pizza-a">${opciones}</select></div>
+          <div class="field"><label>Mitad 2</label><select id="f-pizza-b">${opciones}</select></div>
+        </div>
         <div class="field-row">
           <div class="field"><label>Cantidad</label><input id="f-cantidad" type="number" min="1" value="1"></div>
           <div class="field"><label>Estado</label>
@@ -136,21 +143,59 @@ export function openVentaModal(){
   document.getElementById("btn-cancel").onclick = () => root.innerHTML = "";
   document.getElementById("ov").addEventListener("click", (e) => { if(e.target.id === "ov") root.innerHTML = ""; });
 
-  document.getElementById("btn-save").onclick = async () => {
-    const recetaId = document.getElementById("f-pizza").value;
-    const receta = pizzas.find(p => p.id === recetaId);
-    const calc = calcularReceta(receta);
-    const cantidad = parseInt(document.getElementById("f-cantidad").value) || 1;
+  const fPizza = document.getElementById("f-pizza");
+  const fMitad = document.getElementById("f-mitad");
+  const fMitadRow = document.getElementById("f-mitad-row");
+  const fPizzaA = document.getElementById("f-pizza-a");
+  const fPizzaB = document.getElementById("f-pizza-b");
+  if(pizzas.length > 1) fPizzaB.value = pizzas[1].id;
 
-    // ingredientes que se van a descontar del stock (receta × cantidad vendida, masa incluida)
-    const ingredientesDescontados = ingredientesTotales(receta).map(ing => ({
+  fMitad.addEventListener("change", () => {
+    const activo = fMitad.checked;
+    fMitadRow.classList.toggle("hidden", !activo);
+    fPizza.closest(".field").classList.toggle("hidden", activo);
+  });
+
+  document.getElementById("btn-save").onclick = async () => {
+    const cantidad = parseInt(document.getElementById("f-cantidad").value) || 1;
+    const esMitad = fMitad.checked;
+
+    let recetaId, nombreReceta, calc, ingredientesDescontadosUnit;
+
+    if(esMitad){
+      const recetaA = pizzas.find(p => p.id === fPizzaA.value);
+      const recetaB = pizzas.find(p => p.id === fPizzaB.value);
+      if(!recetaA || !recetaB) { alert("Elige las dos mitades."); return; }
+      const calcA = calcularReceta(recetaA);
+      const calcB = calcularReceta(recetaB);
+      calc = {
+        costoTotal: (calcA.costoTotal + calcB.costoTotal) / 2,
+        venta: (calcA.venta + calcB.venta) / 2,
+      };
+      recetaId = `${recetaA.id}+${recetaB.id}`;
+      nombreReceta = `${nombreVisible(recetaA.nombre)} / ${nombreVisible(recetaB.nombre)} (mitad y mitad)`;
+      ingredientesDescontadosUnit = [
+        ...ingredientesTotales(recetaA).map(ing => ({ insumoId: ing.insumoId, cantidad: ing.cantidad * 0.5 })),
+        ...ingredientesTotales(recetaB).map(ing => ({ insumoId: ing.insumoId, cantidad: ing.cantidad * 0.5 })),
+      ];
+    } else {
+      const receta = pizzas.find(p => p.id === fPizza.value);
+      calc = calcularReceta(receta);
+      recetaId = receta.id;
+      nombreReceta = receta.nombre;
+      ingredientesDescontadosUnit = ingredientesTotales(receta);
+    }
+
+    // ingredientes que se van a descontar del stock (× cantidad vendida)
+    const ingredientesDescontados = ingredientesDescontadosUnit.map(ing => ({
       insumoId: ing.insumoId,
       cantidad: ing.cantidad * cantidad,
     }));
 
     const data = {
       recetaId,
-      nombreReceta: receta.nombre,
+      nombreReceta,
+      esMitad,
       cantidad,
       estado: document.getElementById("f-estado").value,
       cliente: document.getElementById("f-cliente").value.trim(),
