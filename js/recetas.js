@@ -159,7 +159,11 @@ export function openRecetaModal(editId = null){
               <option value="base" ${existing?.tipo==="base"?"selected":""}>Base (ej: Masa)</option>
             </select>
           </div>
+          <div class="field"><label>Costo estimado</label><input id="f-costo-preview" type="text" value="—" disabled></div>
+        </div>
+        <div class="field-row">
           <div class="field"><label>Margen (ej: 0.85 = 85%)</label><input id="f-margen" type="number" step="any" value="${existing?.margen ?? 1}"></div>
+          <div class="field"><label>Precio de venta</label><input id="f-venta" type="number" step="any" placeholder="Se calcula solo"></div>
         </div>
         <div class="field">
           <label><input type="checkbox" id="f-usa-masa" ${existing?.usaMasa ? "checked" : ""}> Incluye una masa (costo de la receta base)</label>
@@ -180,6 +184,45 @@ export function openRecetaModal(editId = null){
   `;
 
   const lineasDiv = document.getElementById("lineas");
+  const fMargen = document.getElementById("f-margen");
+  const fVenta = document.getElementById("f-venta");
+  const fCostoPreview = document.getElementById("f-costo-preview");
+  const fUsaMasa = document.getElementById("f-usa-masa");
+
+  // El usuario puede fijar el Margen o el Precio de venta: el que tocó de
+  // último "manda" y el otro se recalcula solo, según el costo actual.
+  let lastEdited = "margen";
+
+  function costoEnVivo(){
+    const lista = [...lineasDiv.querySelectorAll(".ingredient-line")].map(l => ({
+      insumoId: l.querySelector(".l-insumo").value,
+      cantidad: parseFloat(l.querySelector(".l-cantidad").value) || 0,
+    })).filter(i => i.insumoId && i.cantidad > 0);
+    let costo = costoIngredientes(lista);
+    if(fUsaMasa.checked){
+      const masa = getBaseMasa();
+      if(masa) costo += costoIngredientes(masa.ingredientes);
+    }
+    return costo;
+  }
+
+  function recalcular(){
+    const costo = costoEnVivo();
+    fCostoPreview.value = costo > 0 ? fmtCOP(costo) : "—";
+    if(costo <= 0) return;
+    if(lastEdited === "venta"){
+      const venta = parseFloat(fVenta.value) || 0;
+      fMargen.value = (venta > 0 ? ((venta / costo) - 1) : 0).toFixed(4).replace(/\.?0+$/, "") || "0";
+    } else {
+      const margen = parseFloat(fMargen.value) || 0;
+      fVenta.value = Math.round(costo * (1 + margen));
+    }
+  }
+
+  fMargen.addEventListener("input", () => { lastEdited = "margen"; recalcular(); });
+  fVenta.addEventListener("input", () => { lastEdited = "venta"; recalcular(); });
+  fUsaMasa.addEventListener("change", recalcular);
+
   function addLine(insumoId = "", cantidad = ""){
     const lid = "l" + (lineCount++);
     const wrap = document.createElement("div");
@@ -191,15 +234,19 @@ export function openRecetaModal(editId = null){
       <button class="remove-x" type="button">×</button>
     `;
     if(insumoId) wrap.querySelector(".l-insumo").value = insumoId;
-    wrap.querySelector(".remove-x").onclick = () => wrap.remove();
+    wrap.querySelector(".remove-x").onclick = () => { wrap.remove(); recalcular(); };
+    wrap.querySelector(".l-insumo").addEventListener("change", recalcular);
+    wrap.querySelector(".l-cantidad").addEventListener("input", recalcular);
     lineasDiv.appendChild(wrap);
   }
   (existing?.ingredientes || []).forEach(ing => addLine(ing.insumoId, ing.cantidad));
   if(!existing) addLine();
 
-  document.getElementById("btn-add-line").onclick = () => addLine();
+  document.getElementById("btn-add-line").onclick = () => { addLine(); recalcular(); };
   document.getElementById("btn-cancel").onclick = () => root.innerHTML = "";
   document.getElementById("ov").addEventListener("click", (e) => { if(e.target.id === "ov") root.innerHTML = ""; });
+
+  recalcular();
 
   document.getElementById("btn-save").onclick = async () => {
     const nombre = document.getElementById("f-nombre").value.trim();
@@ -212,8 +259,8 @@ export function openRecetaModal(editId = null){
     const data = {
       nombre,
       tipo: document.getElementById("f-tipo").value,
-      margen: parseFloat(document.getElementById("f-margen").value) || 0,
-      usaMasa: document.getElementById("f-usa-masa").checked,
+      margen: parseFloat(fMargen.value) || 0,
+      usaMasa: fUsaMasa.checked,
       ingredientes,
     };
     const id = editId || nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"") + "-" + Date.now().toString(36);

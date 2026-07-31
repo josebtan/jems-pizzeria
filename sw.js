@@ -4,7 +4,7 @@
 // como respaldo para que la app abra aunque no haya señal.
 // Los archivos externos (Firebase, Google Fonts) se dejan pasar directo a la red.
 
-const CACHE_NAME = "jems-shell-v2";
+const CACHE_NAME = "jems-shell-v3";
 
 const PRECACHE_URLS = [
   "./",
@@ -54,7 +54,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   event.respondWith(
-    fetch(req)
+    fetch(req, { cache: "no-store" })
       .then((res) => {
         const copy = res.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
