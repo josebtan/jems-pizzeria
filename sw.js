@@ -4,13 +4,13 @@
 // como respaldo para que la app abra aunque no haya señal.
 // Los archivos externos (Firebase, Google Fonts) se dejan pasar directo a la red.
 
-const CACHE_NAME = "jems-shell-v6";
+const CACHE_NAME = "jems-shell-v7";
 
 const PRECACHE_URLS = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./css/style.css?v=8",
+  "./css/style.css?v=9",
   "./js/app.js",
   "./js/data.js",
   "./js/firebase-config.js",
