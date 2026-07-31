@@ -135,6 +135,7 @@ body{
 .venta-row__main{display:flex;flex-direction:column;gap:2px;}
 .venta-row__name{font-weight:600;}
 .venta-row__meta{font-size:11.5px;color:var(--cream-dim);font-family:var(--font-mono);}
+.venta-row__desc{font-size:12.5px;color:var(--cream-dim);font-style:italic;margin-top:2px;white-space:pre-wrap;}
 .venta-row__price{font-family:var(--font-mono);color:var(--ember);font-weight:600;}
 .venta-row__actions{display:flex;gap:6px;}
 
@@ -222,11 +223,12 @@ body{
 .modal h2{font-family:var(--font-display);margin-top:0;font-size:22px;}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
 .field label{font-size:12.5px;color:var(--cream-dim);text-transform:uppercase;letter-spacing:.04em;}
-.field input,.field select{
+.field input,.field select,.field textarea{
   background:var(--panel);border:1px solid var(--line);color:var(--cream);
   padding:9px 12px;border-radius:8px;font-family:var(--font-body);font-size:14px;
 }
-.field input:focus,.field select:focus{outline:none;border-color:var(--ember);}
+.field textarea{resize:vertical;min-height:44px;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--ember);}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .modal__actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
 .ingredient-line{display:grid;grid-template-columns:1fr 90px 30px;gap:8px;align-items:center;margin-bottom:8px;}

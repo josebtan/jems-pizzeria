@@ -44,6 +44,7 @@ function rowHTML(v, pendiente){
       <div class="venta-row__main">
         <span class="venta-row__name">${nombreVisible(v.nombreReceta)} × ${v.cantidad}</span>
         <span class="venta-row__meta">${v.fecha || ""}${v.cliente ? " · " + v.cliente : ""}</span>
+        ${v.descripcion ? `<span class="venta-row__desc">${escapeHTML(v.descripcion)}</span>` : ""}
       </div>
       <span class="venta-row__price">${fmtCOP(total)}</span>
       <div class="venta-row__actions">
@@ -52,6 +53,11 @@ function rowHTML(v, pendiente){
       </div>
     </div>
   `;
+}
+function escapeHTML(str){
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 function attachRowEvents(){
@@ -118,6 +124,7 @@ export function openVentaModal(){
           </div>
         </div>
         <div class="field"><label>Cliente (opcional)</label><input id="f-cliente" placeholder="Nombre del cliente"></div>
+        <div class="field"><label>Descripción (opcional)</label><textarea id="f-descripcion" rows="2" placeholder="Dirección, hora de entrega, notas del pedido…"></textarea></div>
         <div class="field"><label>Plante por pizza</label><input id="f-plante" type="number" value="${DEFAULT_PLANTE}"></div>
         <div class="modal__actions">
           <button class="btn" id="btn-cancel">Cancelar</button>
@@ -147,6 +154,7 @@ export function openVentaModal(){
       cantidad,
       estado: document.getElementById("f-estado").value,
       cliente: document.getElementById("f-cliente").value.trim(),
+      descripcion: document.getElementById("f-descripcion").value.trim(),
       precioVentaUnit: calc.venta,
       costoUnit: calc.costoTotal,
       planteUnit: parseFloat(document.getElementById("f-plante").value) || DEFAULT_PLANTE,
