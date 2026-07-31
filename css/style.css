@@ -78,10 +78,8 @@ body{
   padding:11px 12px;border-radius:8px;cursor:pointer;text-align:left;
   transition:background .15s ease,color .15s ease;
 }
-.nav__mark{font-family:var(--font-mono);font-size:11px;color:var(--gold);}
 .nav__item:hover{background:var(--panel);color:var(--cream);}
 .nav__item.is-active{background:var(--ember);color:var(--ink);font-weight:600;}
-.nav__item.is-active .nav__mark{color:var(--ink);}
 
 .sidebar__footer{display:flex;align-items:center;gap:8px;padding:10px 4px 0;border-top:1px solid var(--line);font-size:12px;color:var(--cream-dim);}
 .conn-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0;}
@@ -275,7 +273,6 @@ body{
   .brand__text{display:none;}
   .nav{overflow-x:auto;-webkit-overflow-scrolling:touch;flex:1;}
   .nav__item{flex-shrink:0;}
-  .nav__mark{display:none;}
 
   .table{font-size:12.5px;}
   .table thead th,.table tbody td{padding:9px 10px;}
